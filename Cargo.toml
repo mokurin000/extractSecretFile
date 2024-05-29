@@ -1,0 +1,20 @@
+[package]
+name = "extract-secret-file"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+secrecy = "0.8.0"
+aes = "0.8.4"
+cbc = "0.1.2"
+
+[build-dependencies]
+aes = "0.8.4"
+cbc = "0.1.2"
+
+[profile.release]
+lto = true
+strip = true
+opt-level = "s"
+codegen-units = 1
+panic = "abort"
