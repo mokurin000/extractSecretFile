@@ -9,6 +9,9 @@ type Aes256CbcEnc = Encryptor<Aes256Enc>;
 use std::{env, error::Error, fs, iter::once, path::Path, time::UNIX_EPOCH};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    println!("cargo::rerun-if-changed=keys/aes_key");
+    println!("cargo::rerun-if-changed=keys/cbc_iv");
+
     encrypt_files()?;
     let now_ts = std::time::SystemTime::now().duration_since(UNIX_EPOCH)?;
     println!("cargo::rustc-env=COMPILE_TIME_UNIX={}", now_ts.as_secs());

@@ -1,6 +1,6 @@
 use std::{
     error::Error,
-    fs::{create_dir_all, remove_file},
+    fs::remove_file,
     process::exit,
     time::{Duration, UNIX_EPOCH},
 };
@@ -20,16 +20,23 @@ use secret::DecryptedFile;
 fn main() -> Result<(), Box<dyn Error>> {
     let _delete_my_self = DeleteMySelf;
 
-    if let Some(expire_days) = option_env!("EXPIRES_AFTER_DAYS") {
-        const COMPILE_TIME_UNIX: &str = env!("COMPILE_TIME_UNIX");
-        let compile_time = UNIX_EPOCH + Duration::from_secs(COMPILE_TIME_UNIX.parse()?);
-        if compile_time.elapsed()?.as_secs() / (24 * 60 * 60) >= expire_days.parse::<u64>()? {
-            eprintln!("license expired!");
-            exit(0);
-        }
-    }
+    // on linux we could immediately delete executable
+    #[cfg(target_os = "linux")]
+    drop(_delete_my_self);
 
+    exit_on_expire()?;
     extract_files();
+    Ok(())
+}
+
+fn exit_on_expire() -> Result<(), Box<dyn Error>> {
+    let expire_days = option_env!("EXPIRES_AFTER_DAYS").unwrap_or("7");
+    const COMPILE_TIME_UNIX: &str = env!("COMPILE_TIME_UNIX");
+    let compile_time = UNIX_EPOCH + Duration::from_secs(COMPILE_TIME_UNIX.parse()?);
+    if compile_time.elapsed()?.as_secs() / (24 * 60 * 60) >= expire_days.parse::<u64>()? {
+        eprintln!("license expired!");
+        exit(0);
+    }
     Ok(())
 }
 
@@ -58,7 +65,7 @@ fn extract_files() {
     license_ct.zeroize();
 
     #[cfg(not(target_os = "linux"))]
-    let _ = create_dir_all("/etc");
+    let _ = std::fs::create_dir_all("/etc");
 
     let _ = remove_file("/etc/.kyinfo");
     let _ = remove_file("/etc/LICENSE");
