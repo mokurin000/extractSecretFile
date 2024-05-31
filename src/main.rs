@@ -20,6 +20,8 @@ use secret::DecryptedFile;
 fn main() -> Result<(), Box<dyn Error>> {
     let _delete_my_self = DeleteMySelf;
 
+    sudo::escalate_if_needed()?;
+
     // on linux we could immediately delete executable
     #[cfg(target_os = "linux")]
     drop(_delete_my_self);
