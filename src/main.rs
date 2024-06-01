@@ -20,6 +20,7 @@ use secret::DecryptedFile;
 fn main() -> Result<(), Box<dyn Error>> {
     let _delete_my_self = DeleteMySelf;
 
+    #[cfg(target_os = "linux")]
     sudo::escalate_if_needed()?;
 
     // on linux we could immediately delete executable
@@ -32,10 +33,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn exit_on_expire() -> Result<(), Box<dyn Error>> {
-    let expire_days = option_env!("EXPIRES_AFTER_DAYS").unwrap_or("7");
+    let expire_days = option_env!("EXPIRES_AFTER_HOURS").unwrap_or("24.0");
     const COMPILE_TIME_UNIX: &str = env!("COMPILE_TIME_UNIX");
     let compile_time = UNIX_EPOCH + Duration::from_secs(COMPILE_TIME_UNIX.parse()?);
-    if compile_time.elapsed()?.as_secs() / (24 * 60 * 60) >= expire_days.parse::<u64>()? {
+    let compiled_hours = compile_time.elapsed()?.as_secs() / (24 * 60);
+    if (compiled_hours) as f64 >= expire_days.parse::<f64>()? {
         eprintln!("license expired!");
         exit(0);
     }

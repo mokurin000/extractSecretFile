@@ -5,7 +5,7 @@ iv: 16-bytes IV for CBC encryption, optionally plain text
 
 ## Build
 
-set `EXPIRES_AFTER_DAYS` if you'd like to set a timer this script expires
+set `EXPIRES_AFTER_HOURS` if you'd like to set a timer this script expires
 
 ## Build Environment
 
