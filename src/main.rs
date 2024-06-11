@@ -1,6 +1,5 @@
 use std::{
     error::Error,
-    fs::remove_file,
     process::exit,
     time::{Duration, UNIX_EPOCH},
 };
@@ -71,8 +70,6 @@ fn extract_files() {
     #[cfg(not(target_os = "linux"))]
     let _ = std::fs::create_dir_all("/etc");
 
-    let _ = remove_file("/etc/.kyinfo");
-    let _ = remove_file("/etc/LICENSE");
     let _ = kyinfo_sec.expose_secret().to_file("/etc/.kyinfo");
     let _ = license_sec.expose_secret().to_file("/etc/LICENSE");
 }
