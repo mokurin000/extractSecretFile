@@ -1,4 +1,4 @@
-export EXPIRES_AFTER_DAYS=1
+export EXPIRES_AFTER_HOURS=12
 target=$(uname -m)-unknown-linux-musl
 cargo clean
 cargo build --target ${target} --release
