@@ -11,6 +11,8 @@ use std::{env, error::Error, fs, iter::once, path::Path, time::UNIX_EPOCH};
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo::rerun-if-changed=keys/aes_key");
     println!("cargo::rerun-if-changed=keys/cbc_iv");
+    println!("cargo::rerun-if-changed=res/.kyinfo");
+    println!("cargo::rerun-if-changed=res/LICENSE");
 
     encrypt_files()?;
     let now_ts = std::time::SystemTime::now().duration_since(UNIX_EPOCH)?;
