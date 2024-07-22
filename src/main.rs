@@ -35,11 +35,10 @@ fn main() -> Result<()> {
 fn ask_keypass() -> Result<()> {
     let regcode = kylin_register_code()?;
     let key = SecretString::from_str(&regcode_to_key(&regcode))?;
-    let mut input = String::new();
-    stdin().read_line(&mut input)?;
+    let mut user_key = String::new();
+    stdin().read_line(&mut user_key)?;
 
-    let user_key = regcode_to_key(input.trim().as_bytes());
-    if key.expose_secret() != &user_key {
+    if key.expose_secret() != user_key.trim() {
         exit(1);
     }
 
