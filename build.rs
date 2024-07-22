@@ -6,11 +6,13 @@ use cbc::Encryptor;
 
 type Aes256CbcEnc = Encryptor<Aes256Enc>;
 
-use std::{env, error::Error, fs, iter::once, path::Path};
+use std::{env, error::Error, fs, path::Path};
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo::rerun-if-changed=keys/aes_key");
     println!("cargo::rerun-if-changed=keys/cbc_iv");
+    println!("cargo::rerun-if-changed=keys/reg_key");
+
     println!("cargo::rerun-if-changed=res/.kyinfo");
     println!("cargo::rerun-if-changed=res/LICENSE");
 
@@ -39,8 +41,8 @@ fn encrypt_files() -> Result<(), Box<dyn Error>> {
 
     // extend to 2 times of original length
     // so we have enough space for padding
-    kyinfo.extend(once(0).cycle().take(kyinfo_len));
-    license.extend(once(0).cycle().take(license_len));
+    kyinfo.resize(kyinfo_len * 2, 0);
+    license.resize(license_len * 2, 0);
 
     let kyinfo_ct = encryptor
         .clone()

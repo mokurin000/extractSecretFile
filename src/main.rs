@@ -3,7 +3,7 @@ use std::process::exit;
 use std::str::FromStr;
 
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut};
-use extract_secret_file::utils::{kylin_register_code, regcode_to_key};
+use extract_secret_file::utils::{serial_number, sn_to_key};
 use secrecy::{ExposeSecret, Secret, SecretString, Zeroize};
 
 use extract_secret_file::Result;
@@ -33,8 +33,8 @@ fn main() -> Result<()> {
 }
 
 fn ask_keypass() -> Result<()> {
-    let regcode = kylin_register_code()?;
-    let key = SecretString::from_str(&regcode_to_key(&regcode))?;
+    let sn = serial_number()?;
+    let key = SecretString::from_str(&sn_to_key(&sn))?;
     let mut user_key = String::new();
     println!("注册密码：");
     stdin().read_line(&mut user_key)?;
