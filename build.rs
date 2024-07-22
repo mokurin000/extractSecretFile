@@ -6,7 +6,7 @@ use cbc::Encryptor;
 
 type Aes256CbcEnc = Encryptor<Aes256Enc>;
 
-use std::{env, error::Error, fs, iter::once, path::Path, time::UNIX_EPOCH};
+use std::{env, error::Error, fs, iter::once, path::Path};
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo::rerun-if-changed=keys/aes_key");
@@ -15,8 +15,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo::rerun-if-changed=res/LICENSE");
 
     encrypt_files()?;
-    let now_ts = std::time::SystemTime::now().duration_since(UNIX_EPOCH)?;
-    println!("cargo::rustc-env=COMPILE_TIME_UNIX={}", now_ts.as_secs());
+    #[cfg(feature = "time-based")]
+    {
+        use std::time::UNIX_EPOCH;
+        let now_ts = std::time::SystemTime::now().duration_since(UNIX_EPOCH)?;
+        println!("cargo::rustc-env=COMPILE_TIME_UNIX={}", now_ts.as_secs());
+    }
     Ok(())
 }
 

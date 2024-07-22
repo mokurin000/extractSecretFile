@@ -13,5 +13,5 @@ pub const fn xor_encrypt<const N: usize>(input: &[u8; N]) -> [u8; N] {
     output
 }
 
-pub const AES_KEY_ENC: [u8; 32] = xor_encrypt(include_bytes!("../keys/aes_key"));
-pub const CBC_IV_ENC: [u8; 16] = xor_encrypt(include_bytes!("../keys/cbc_iv"));
+pub const AES_KEY_ENC: [u8; 32] = xor_encrypt(include_bytes!("../../keys/aes_key"));
+pub const CBC_IV_ENC: [u8; 16] = xor_encrypt(include_bytes!("../../keys/cbc_iv"));

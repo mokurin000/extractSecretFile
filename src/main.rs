@@ -1,22 +1,19 @@
-use std::{
-    error::Error,
-    process::exit,
-    time::{Duration, UNIX_EPOCH},
-};
+use std::io::stdin;
+use std::process::exit;
+use std::str::FromStr;
 
 use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut};
-use secrecy::{ExposeSecret, Secret, Zeroize};
+use extract_secret_file::utils::{kylin_register_code, regcode_to_key};
+use secrecy::{ExposeSecret, Secret, SecretString, Zeroize};
 
-mod decrypt;
-mod dms;
-mod enc;
-mod secret;
+use extract_secret_file::Result;
+use extract_secret_file::{decrypt, dms, enc_mem, secret};
 
 use dms::DeleteMySelf;
-use enc::{xor_encrypt, AES_KEY_ENC, CBC_IV_ENC};
+use enc_mem::{xor_encrypt, AES_KEY_ENC, CBC_IV_ENC};
 use secret::DecryptedFile;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let _delete_my_self = DeleteMySelf;
 
     #[cfg(target_os = "linux")]
@@ -26,13 +23,34 @@ fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(target_os = "linux")]
     drop(_delete_my_self);
 
+    #[cfg(feature = "time-based")]
     exit_on_expire()?;
+
+    ask_keypass()?;
+
     extract_files();
     Ok(())
 }
 
-fn exit_on_expire() -> Result<(), Box<dyn Error>> {
+fn ask_keypass() -> Result<()> {
+    let regcode = kylin_register_code()?;
+    let key = SecretString::from_str(&regcode_to_key(&regcode))?;
+    let mut input = String::new();
+    stdin().read_line(&mut input)?;
+
+    let user_key = regcode_to_key(input.trim().as_bytes());
+    if key.expose_secret() != &user_key {
+        exit(1);
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "time-based")]
+fn exit_on_expire() -> Result<()> {
+    use std::time::{Duration, UNIX_EPOCH};
     let expire_days = option_env!("EXPIRES_AFTER_HOURS").unwrap_or("24.0");
+
     const COMPILE_TIME_UNIX: &str = env!("COMPILE_TIME_UNIX");
     let compile_time = UNIX_EPOCH + Duration::from_secs(COMPILE_TIME_UNIX.parse()?);
     let compiled_hours = compile_time.elapsed()?.as_secs() / (24 * 60);

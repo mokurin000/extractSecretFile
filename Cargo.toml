@@ -3,11 +3,17 @@ name = "extract-secret-file"
 version = "0.1.0"
 edition = "2021"
 
+default-run = "extract-secret-file"
+
+[features]
+time-based = []
+
 [dependencies]
 secrecy = "0.8.0"
 aes = "0.8.4"
 cbc = "0.1.2"
 sudo = "0.6.0"
+hex-simd = "0.8.0"
 
 [build-dependencies]
 aes = "0.8.4"
