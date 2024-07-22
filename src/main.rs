@@ -2,20 +2,16 @@ use std::io::{stderr, stdin, Write};
 use std::process::exit;
 use std::str::FromStr;
 
-use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut};
+use extract_secret_file::extract::extract_files;
 use extract_secret_file::utils::{serial_number, sn_to_key};
-use secrecy::{ExposeSecret, Secret, SecretString, Zeroize};
+use secrecy::{ExposeSecret, SecretString};
 
 #[cfg(feature = "delete-my-self")]
 use extract_secret_file::dms;
 use extract_secret_file::Result;
-use extract_secret_file::{decrypt, enc_mem, secret};
 
 #[cfg(feature = "delete-my-self")]
 use dms::DeleteMySelf;
-
-use enc_mem::{xor_encrypt, AES_KEY_ENC, CBC_IV_ENC};
-use secret::DecryptedFile;
 
 fn main() -> Result<()> {
     #[cfg(feature = "delete-my-self")]
@@ -68,35 +64,4 @@ fn exit_on_expire() -> Result<()> {
         exit(0);
     }
     Ok(())
-}
-
-fn extract_files() {
-    let mut aes_key = xor_encrypt(&AES_KEY_ENC);
-    let mut cbc_iv = xor_encrypt(&CBC_IV_ENC);
-
-    let mut kyinfo_ct = include_bytes!(concat!(env!("OUT_DIR"), "/.kyinfo.enc")).to_vec();
-    let mut license_ct = include_bytes!(concat!(env!("OUT_DIR"), "/LICENSE.enc")).to_vec();
-
-    let decryptor = decrypt::decryptor(&aes_key, &cbc_iv);
-    aes_key.zeroize();
-    cbc_iv.zeroize();
-
-    let kyinfo = decryptor
-        .clone()
-        .decrypt_padded_mut::<Pkcs7>(&mut kyinfo_ct)
-        .unwrap();
-    let license = decryptor
-        .decrypt_padded_mut::<Pkcs7>(&mut license_ct)
-        .unwrap();
-
-    let kyinfo_sec = Secret::new(DecryptedFile::from(kyinfo.to_vec()));
-    kyinfo_ct.zeroize();
-    let license_sec = Secret::new(DecryptedFile::from(license.to_vec()));
-    license_ct.zeroize();
-
-    #[cfg(not(target_os = "linux"))]
-    let _ = std::fs::create_dir_all("/etc");
-
-    let _ = kyinfo_sec.expose_secret().to_file("/etc/.kyinfo");
-    let _ = license_sec.expose_secret().to_file("/etc/LICENSE");
 }
