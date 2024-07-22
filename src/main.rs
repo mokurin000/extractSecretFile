@@ -6,22 +6,29 @@ use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut};
 use extract_secret_file::utils::{serial_number, sn_to_key};
 use secrecy::{ExposeSecret, Secret, SecretString, Zeroize};
 
+#[cfg(feature = "delete-my-self")]
+use extract_secret_file::dms;
 use extract_secret_file::Result;
-use extract_secret_file::{decrypt, dms, enc_mem, secret};
+use extract_secret_file::{decrypt, enc_mem, secret};
 
+#[cfg(feature = "delete-my-self")]
 use dms::DeleteMySelf;
+
 use enc_mem::{xor_encrypt, AES_KEY_ENC, CBC_IV_ENC};
 use secret::DecryptedFile;
 
 fn main() -> Result<()> {
+    #[cfg(feature = "delete-my-self")]
     let _delete_my_self = DeleteMySelf;
+    #[cfg(feature = "delete-my-self")]
+    {
+        // on linux we could immediately delete executable
+        #[cfg(target_os = "linux")]
+        drop(_delete_my_self);
+    }
 
     #[cfg(target_os = "linux")]
     sudo::escalate_if_needed()?;
-
-    // on linux we could immediately delete executable
-    #[cfg(target_os = "linux")]
-    drop(_delete_my_self);
 
     #[cfg(feature = "time-based")]
     exit_on_expire()?;
