@@ -25,5 +25,7 @@ pub fn sn_to_key(serial_number: &[u8]) -> String {
     let enc = Aes256Enc::new(include_bytes!("../../keys/reg_key").into())
         .encrypt_padded_mut::<Pkcs7>(&mut regcode, msg_len)
         .unwrap();
-    hex_simd::encode_to_string(enc, hex_simd::AsciiCase::Lower)
+    let md5 = md5::compute(enc);
+    let hex = hex_simd::encode_to_string(md5.0, hex_simd::AsciiCase::Lower);
+    unsafe { String::from_utf8_unchecked(hex.as_bytes()[..9].to_vec()) }
 }

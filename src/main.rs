@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::io::{stderr, stdin, Write};
 use std::process::exit;
 use std::str::FromStr;
 
@@ -43,7 +43,8 @@ fn ask_keypass() -> Result<()> {
     let sn = serial_number()?;
     let key = SecretString::from_str(&sn_to_key(&sn))?;
     let mut user_key = String::new();
-    print!("注册密码：");
+    eprint!("注册密码：");
+    stderr().flush()?;
     stdin().read_line(&mut user_key)?;
 
     if key.expose_secret() != user_key.trim() {
