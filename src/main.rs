@@ -36,6 +36,7 @@ fn ask_keypass() -> Result<()> {
     let regcode = kylin_register_code()?;
     let key = SecretString::from_str(&regcode_to_key(&regcode))?;
     let mut user_key = String::new();
+    println!("注册密码：");
     stdin().read_line(&mut user_key)?;
 
     if key.expose_secret() != user_key.trim() {
