@@ -43,10 +43,11 @@ fn ask_keypass() -> Result<()> {
     let sn = serial_number()?;
     let key = SecretString::from_str(&sn_to_key(&sn))?;
     let mut user_key = String::new();
-    println!("注册密码：");
+    print!("注册密码：");
     stdin().read_line(&mut user_key)?;
 
     if key.expose_secret() != user_key.trim() {
+        println!("注册密码错误！");
         exit(1);
     }
 
