@@ -4,3 +4,6 @@
 /keys/reg_key
 
 *.7z
+
+/vendor
+/.cargo
