@@ -4,6 +4,7 @@ use std::process::exit;
 use extract_secret_file::extract::extract_files;
 use extract_secret_file::net::Verify;
 use extract_secret_file::utils::{code_to_key, unique_code};
+use reqwest::header::CONTENT_TYPE;
 use secrecy::{ExposeSecret, Secret};
 
 #[cfg(feature = "delete-my-self")]
@@ -12,6 +13,7 @@ use extract_secret_file::Result;
 
 #[cfg(feature = "delete-my-self")]
 use dms::DeleteMySelf;
+use serde_json::json;
 
 fn main() -> Result<()> {
     #[cfg(feature = "delete-my-self")]
@@ -46,23 +48,19 @@ fn ask_keypass() -> Result<()> {
     // remove '\n' at the end
     user_key = user_key.trim().to_owned();
 
-    // offline mode
     match user_key.len() {
+        // online mode
         8 => {
-            let content = Secret::new(format!(
-                r#"
-{{
-    "serial_number": {user_key},
-    "registration_code": {}
-}}"#,
-                key.expose_secret()
-            ));
+            let content = json!({
+                        "serial_number": user_key,
+                        "registration_code": key.expose_secret(),
+            });
             let post_url = "http://8.134.130.103:8000/register";
             let client = reqwest::blocking::Client::new();
             let resp = client
                 .post(post_url)
-                .body(content.expose_secret().clone())
-                .header("centent-type", "application/json")
+                .header(CONTENT_TYPE, "application/json")
+                .json(&content)
                 .send();
             let resp: Verify = match resp {
                 Err(e) => {
@@ -78,6 +76,7 @@ fn ask_keypass() -> Result<()> {
                 exit(1);
             }
         }
+        // offline mode
         9 => {
             if key.expose_secret() != &user_key {
                 println!("注册密码错误！");
