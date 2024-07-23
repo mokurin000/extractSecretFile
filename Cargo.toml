@@ -16,6 +16,8 @@ cbc = "0.1.2"
 sudo = "0.6.0"
 md5 = "0.7.0"
 hex-simd = "0.8.0"
+reqwest = { version = "0.12.5", features = ["blocking", "json"] }
+serde = { version = "1.0.204", features = ["derive"] }
 
 [build-dependencies]
 aes = "0.8.4"

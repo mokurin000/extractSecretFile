@@ -1,10 +1,10 @@
 use std::io::{stderr, stdin, Write};
 use std::process::exit;
-use std::str::FromStr;
 
 use extract_secret_file::extract::extract_files;
-use extract_secret_file::utils::{serial_number, sn_to_key};
-use secrecy::{ExposeSecret, SecretString};
+use extract_secret_file::net::Verify;
+use extract_secret_file::utils::{code_to_key, unique_code};
+use secrecy::{ExposeSecret, Secret};
 
 #[cfg(feature = "delete-my-self")]
 use extract_secret_file::dms;
@@ -36,16 +36,55 @@ fn main() -> Result<()> {
 }
 
 fn ask_keypass() -> Result<()> {
-    let sn = serial_number()?;
-    let key = SecretString::from_str(&sn_to_key(&sn))?;
+    let sn = unique_code()?;
+    let key = Secret::new(code_to_key(&sn));
     let mut user_key = String::new();
     eprint!("注册密码：");
     stderr().flush()?;
     stdin().read_line(&mut user_key)?;
 
-    if key.expose_secret() != user_key.trim() {
-        println!("注册密码错误！");
-        exit(1);
+    // offline mode
+    match user_key.len() {
+        8 => {
+            let content = Secret::new(format!(
+                r#"
+{{
+    "serial_number": {user_key},
+    "registration_code": {}
+}}"#,
+                key.expose_secret()
+            ));
+            let post_url = "http://8.134.130.103:8000/register";
+            let client = reqwest::blocking::Client::new();
+            let resp = client
+                .post(post_url)
+                .body(content.expose_secret().clone())
+                .header("centent-type", "application/json")
+                .send();
+            let resp: Verify = match resp {
+                Err(e) => {
+                    eprintln!("网络错误！请稍后重试\n{e}");
+                    exit(1);
+                }
+                Ok(r) => r.json()?,
+            };
+
+            if !resp.verified {
+                println!("验证未通过！");
+                println!("{:#?}", resp);
+                exit(1);
+            }
+        }
+        9 => {
+            if key.expose_secret() != user_key.trim() {
+                println!("注册密码错误！");
+                exit(2);
+            }
+        }
+        _ => {
+            eprintln!("无效密码！");
+            exit(1)
+        }
     }
 
     Ok(())

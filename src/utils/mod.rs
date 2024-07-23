@@ -7,18 +7,22 @@ use aes::{
 
 use crate::Result;
 
-pub fn serial_number() -> Result<Vec<u8>> {
-    let out = Command::new("dmidecode")
-        .arg("-s")
-        .arg("system-serial-number")
+pub fn unique_code() -> Result<Vec<u8>> {
+    const MAGIC: u64 = 0x55555555;
+    let out = Command::new("sh")
+        .arg("-c")
+        .arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address")
         .output()?;
     let stdout = out.stdout;
     let out = String::from_utf8(stdout)?;
+    let out = (MAGIC
+        ^ u64::from_str_radix(&out.trim().replace(":", "").trim_start_matches('0'), 16)?)
+    .to_string();
     Ok(out.trim().as_bytes().to_owned())
 }
 
-pub fn sn_to_key(serial_number: &[u8]) -> String {
-    let mut regcode = serial_number.to_owned();
+pub fn code_to_key(code: &[u8]) -> String {
+    let mut regcode = code.to_owned();
     let msg_len = regcode.len();
     regcode.resize(256, 0);
 

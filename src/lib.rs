@@ -7,6 +7,8 @@ pub mod enc_mem;
 pub mod secret;
 pub mod utils;
 
+pub mod net;
+
 pub mod extract;
 
 pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
