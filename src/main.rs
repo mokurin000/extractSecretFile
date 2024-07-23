@@ -43,6 +43,9 @@ fn ask_keypass() -> Result<()> {
     stderr().flush()?;
     stdin().read_line(&mut user_key)?;
 
+    // remove '\n' at the end
+    user_key = user_key.trim().to_owned();
+
     // offline mode
     match user_key.len() {
         8 => {
@@ -76,7 +79,7 @@ fn ask_keypass() -> Result<()> {
             }
         }
         9 => {
-            if key.expose_secret() != user_key.trim() {
+            if key.expose_secret() != &user_key {
                 println!("注册密码错误！");
                 exit(2);
             }
