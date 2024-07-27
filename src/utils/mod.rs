@@ -11,7 +11,7 @@ pub fn unique_code() -> Result<Vec<u8>> {
     const MAGIC: u64 = 0x55555555;
     let out = Command::new("sh")
         .arg("-c")
-        .arg("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address")
+        .arg("ip -o link | grep link/ether | awk '{ print $17 }' | head -1")
         .output()?;
     let stdout = out.stdout;
     let out = String::from_utf8(stdout)?;
