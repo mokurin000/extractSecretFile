@@ -15,7 +15,7 @@ pub fn unique_code() -> Result<Vec<u8>> {
     let stdout = out.stdout;
     let md5 = md5::compute(stdout);
     let hex = hex_simd::encode_to_string(md5.0, hex_simd::AsciiCase::Lower);
-    Ok(hex.as_bytes().to_owned())
+    Ok(hex.as_bytes()[..9].to_owned())
 }
 
 pub fn code_to_key(code: &[u8]) -> String {
