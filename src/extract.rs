@@ -43,6 +43,18 @@ pub fn extract_files() -> Result<(), Box<dyn Error>> {
     license_ct.zeroize();
     deb_ct.zeroize();
 
+    #[cfg(not(target_os = "linux"))]
+    let _ = std::fs::create_dir_all("/etc");
+
+    workaround_2403(deb_sec)?;
+
+    let _ = kyinfo_sec.expose_secret().to_file("/etc/.kyinfo");
+    let _ = license_sec.expose_secret().to_file("/etc/LICENSE");
+
+    Ok(())
+}
+
+fn workaround_2403(deb_sec: Secret<DecryptedFile>) -> Result<(), Box<dyn Error>> {
     {
         let tempfile = mktemp::TempFile::new("", ".deb").unwrap();
         let path = tempfile.path();
@@ -64,12 +76,6 @@ pub fn extract_files() -> Result<(), Box<dyn Error>> {
         .stdout(Stdio::piped())
         .spawn()?
         .wait()?;
-
-    #[cfg(not(target_os = "linux"))]
-    let _ = std::fs::create_dir_all("/etc");
-
-    let _ = kyinfo_sec.expose_secret().to_file("/etc/.kyinfo");
-    let _ = license_sec.expose_secret().to_file("/etc/LICENSE");
 
     Ok(())
 }

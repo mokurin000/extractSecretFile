@@ -39,9 +39,12 @@ fn main() -> Result<()> {
 
 fn ask_keypass() -> Result<()> {
     let sn = unique_code()?;
+
     let key = Secret::new(code_to_key(&sn));
+    eprintln!("您的序列号为: {}", String::from_utf8(sn)?);
     let mut user_key = String::new();
-    eprint!("注册密码：");
+
+    eprint!("请输入注册码: ");
     stderr().flush()?;
     stdin().read_line(&mut user_key)?;
 
