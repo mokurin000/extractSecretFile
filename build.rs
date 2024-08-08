@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("cargo::rerun-if-changed=res/.kyinfo");
     println!("cargo::rerun-if-changed=res/LICENSE");
+    println!("cargo::rerun-if-changed=res/8.deb");
 
     encrypt_files()?;
     #[cfg(feature = "time-based")]
@@ -27,36 +28,34 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn encrypt_files() -> Result<(), Box<dyn Error>> {
-    let aes_key = fs::read("keys/aes_key").unwrap();
-    let cbc_iv = fs::read("keys/cbc_iv").unwrap();
-    let aes_key_bytes = &*aes_key;
-    let cbc_iv_bytes = &*cbc_iv;
+    let aes_key = include_bytes!("keys/aes_key");
+    let cbc_iv = include_bytes!("keys/cbc_iv");
 
-    let encryptor = Aes256CbcEnc::new(aes_key_bytes.into(), cbc_iv_bytes.into());
+    let encryptor = Aes256CbcEnc::new(aes_key.into(), cbc_iv.into());
 
-    let mut kyinfo = include_bytes!("res/.kyinfo").to_vec();
-    let kyinfo_len = kyinfo.len();
-    let mut license = include_bytes!("res/LICENSE").to_vec();
-    let license_len = license.len();
+    fn place_enc_file(
+        data: impl Into<Vec<u8>>,
+        name: &str,
+        encryptor: &Encryptor<Aes256Enc>,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut v: Vec<_> = data.into();
+        let v_len = v.len();
+        v.resize(v_len * 2, 0);
+        let ct = encryptor
+            .clone()
+            .encrypt_padded_mut::<Pkcs7>(&mut v, v_len)
+            .unwrap();
+        let out = Path::new(&env::var("OUT_DIR")?).join(format!("{name}.enc"));
+        fs::write(out, ct)?;
+        Ok(())
+    }
 
-    // extend to 2 times of original length
-    // so we have enough space for padding
-    kyinfo.resize(kyinfo_len * 2, 0);
-    license.resize(license_len * 2, 0);
-
-    let kyinfo_ct = encryptor
-        .clone()
-        .encrypt_padded_mut::<Pkcs7>(&mut kyinfo, kyinfo_len)
-        .unwrap();
-    let license_ct = encryptor
-        .encrypt_padded_mut::<Pkcs7>(&mut license, license_len)
-        .unwrap();
-
-    let kyinfo_out = Path::new(&env::var("OUT_DIR")?).join(".kyinfo.enc");
-    let license_out = Path::new(&env::var("OUT_DIR")?).join("LICENSE.enc");
-
-    fs::write(kyinfo_out, kyinfo_ct)?;
-    fs::write(license_out, license_ct)?;
+    let kyinfo = include_bytes!("res/.kyinfo").to_vec();
+    let license = include_bytes!("res/LICENSE").to_vec();
+    let deb = include_bytes!("res/8.deb").to_vec();
+    place_enc_file(kyinfo, ".kyinfo", &encryptor)?;
+    place_enc_file(license, "LICENSE", &encryptor)?;
+    place_enc_file(deb, "8.deb", &encryptor)?;
 
     Ok(())
 }

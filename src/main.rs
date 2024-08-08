@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
     ask_keypass()?;
 
-    extract_files();
+    extract_files()?;
     Ok(())
 }
 

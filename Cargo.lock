@@ -193,6 +193,7 @@ dependencies = [
  "cbc",
  "hex-simd",
  "md5",
+ "mktemp-rs",
  "reqwest",
  "secrecy",
  "serde",
@@ -566,6 +567,15 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "mktemp-rs"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91145f1540600f57bfa5cca8484c175dd966909276ce9e933b3ead45bb557b74"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
