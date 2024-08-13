@@ -20,6 +20,7 @@ reqwest = { version = "0.12.5", features = ["blocking", "json"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 mktemp-rs = "0.2.0"
+colored = "2.1.0"
 
 [build-dependencies]
 aes = "0.8.4"

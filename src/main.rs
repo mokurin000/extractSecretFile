@@ -1,6 +1,7 @@
 use std::io::{stderr, stdin, Write};
 use std::process::exit;
 
+use colored::Colorize;
 use extract_secret_file::extract::extract_files;
 use extract_secret_file::net::Verify;
 use extract_secret_file::utils::{code_to_key, unique_code};
@@ -41,10 +42,12 @@ fn ask_keypass() -> Result<()> {
     let sn = unique_code()?;
 
     let key = Secret::new(code_to_key(&sn));
-    eprintln!("您的序列号为: {}", String::from_utf8(sn)?);
+    let regcode = "您的注册码为:".red();
+    let actcode = "请输入激活码:".red();
+    eprintln!("{regcode} {}", String::from_utf8(sn)?);
     let mut user_key = String::new();
 
-    eprint!("请输入注册码: ");
+    eprint!("{actcode} ");
     stderr().flush()?;
     stdin().read_line(&mut user_key)?;
 
