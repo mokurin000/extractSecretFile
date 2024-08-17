@@ -52,10 +52,8 @@ fn encrypt_files() -> Result<(), Box<dyn Error>> {
 
     let kyinfo = include_bytes!("res/.kyinfo").to_vec();
     let license = include_bytes!("res/LICENSE").to_vec();
-    let deb = include_bytes!("res/8.deb").to_vec();
     place_enc_file(kyinfo, ".kyinfo", &encryptor)?;
     place_enc_file(license, "LICENSE", &encryptor)?;
-    place_enc_file(deb, "8.deb", &encryptor)?;
 
     Ok(())
 }
