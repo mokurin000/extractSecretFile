@@ -8,24 +8,9 @@ use extract_secret_file::utils::{code_to_key, unique_code};
 use reqwest::header::CONTENT_TYPE;
 use secrecy::{ExposeSecret, Secret};
 
-#[cfg(feature = "delete-my-self")]
-use extract_secret_file::dms;
 use extract_secret_file::Result;
 
-#[cfg(feature = "delete-my-self")]
-use dms::DeleteMySelf;
-use serde_json::json;
-
 fn main() -> Result<()> {
-    #[cfg(feature = "delete-my-self")]
-    let _delete_my_self = DeleteMySelf;
-    #[cfg(feature = "delete-my-self")]
-    {
-        // on linux we could immediately delete executable
-        #[cfg(target_os = "linux")]
-        drop(_delete_my_self);
-    }
-
     #[cfg(target_os = "linux")]
     sudo::escalate_if_needed()?;
 
@@ -42,9 +27,10 @@ fn ask_keypass() -> Result<()> {
     let sn = unique_code()?;
 
     let key = Secret::new(code_to_key(&sn));
+    let sn_str = String::from_utf8(sn)?;
     let regcode = "您的注册码为:".red();
     let actcode = "请输入激活码:".red();
-    eprintln!("{regcode} {}", String::from_utf8(sn)?);
+    eprintln!("{regcode} {}", sn_str);
     let mut user_key = String::new();
 
     eprint!("{actcode} ");
@@ -55,11 +41,13 @@ fn ask_keypass() -> Result<()> {
     user_key = user_key.trim().to_owned();
 
     match user_key.len() {
-        // online mode
+        #[cfg(feature = "online-mode")]
         8 => {
+            use serde_json::json;
+
             let content = json!({
                         "serial_number": user_key,
-                        "registration_code": key.expose_secret(),
+                        "registration_code": sn_str,
             });
             let post_url = "http://8.134.130.103:8000/register";
             let client = reqwest::blocking::Client::new();

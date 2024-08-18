@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::process::{Command, Stdio};
 
 use aes::cipher::block_padding::Pkcs7;
 use aes::cipher::BlockDecryptMut;
