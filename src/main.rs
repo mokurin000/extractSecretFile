@@ -3,9 +3,7 @@ use std::process::exit;
 
 use colored::Colorize;
 use extract_secret_file::extract::extract_files;
-use extract_secret_file::net::Verify;
 use extract_secret_file::utils::{code_to_key, unique_code};
-use reqwest::header::CONTENT_TYPE;
 use secrecy::{ExposeSecret, Secret};
 
 use extract_secret_file::Result;
@@ -43,6 +41,9 @@ fn ask_keypass() -> Result<()> {
     match user_key.len() {
         #[cfg(feature = "online-mode")]
         8 => {
+            use extract_secret_file::net::Verify;
+
+            use reqwest::header::CONTENT_TYPE;
             use serde_json::json;
 
             let content = json!({
