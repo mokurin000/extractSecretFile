@@ -48,7 +48,7 @@ fn ask_keypass() -> Result<()> {
 
             let content = json!({
                         "serial_number": user_key,
-                        "registration_code": sn_str,
+                        "registration_code": key.expose_secret(),
             });
             let post_url = "http://8.134.130.103:8000/register";
             let client = reqwest::blocking::Client::new();
